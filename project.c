@@ -99,11 +99,16 @@ void read_register(unsigned r1,unsigned r2,unsigned *Reg,unsigned *data1,unsigne
 // Michael C. (4/17/2024 @23:54:00)
 void sign_extend(unsigned offset,unsigned *extended_value)
 {
+    unsigned sign_extended_value; // Result (Sign-extended value)
     if ((offset >> 15) == 1) {
-        *extended_value = offset | 0xFFFF0000;
+        // Extend bits if signaficiant bit is set
+        sign_extended_value = offset | 0xFFFF0000; // Extend bits
     } else {
-        *extended_value = offset & 0x0000FFFF;
+        // Otherwise clear upper bits
+        sign_extended_value = offset & 0x0000FFFF; // Clear upper bits
     }
+    // [sign_extend(...) #1 in teacher's guideline]
+    *extended_value = sign_extended_value;
 }
 
 /* ALU operations */
