@@ -84,17 +84,26 @@ int instruction_decode(unsigned op,struct_controls *controls)
 
 /* Read Register */
 /* 5 Points */
+// Michael C. (4/17/2024 @20:28:00)
 void read_register(unsigned r1,unsigned r2,unsigned *Reg,unsigned *data1,unsigned *data2)
 {
-
+    // [read_register(...) #1 in teacher's guideline]
+    *data1 = Reg[r1]; // Read r1 from Reg and write to data1
+    // [read_register(...) #1 in teacher's guideline]
+    *data2 = Reg[r2]; // Read r2 from Reg and write to data2
 }
 
 
 /* Sign Extend */
 /* 10 Points */
+// Michael C. (4/17/2024 @23:54:00)
 void sign_extend(unsigned offset,unsigned *extended_value)
 {
-
+    if ((offset >> 15) == 1) {
+        *extended_value = offset | 0xFFFF0000;
+    } else {
+        *extended_value = offset & 0x0000FFFF;
+    }
 }
 
 /* ALU operations */
