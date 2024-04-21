@@ -113,9 +113,42 @@ void sign_extend(unsigned offset,unsigned *extended_value)
 
 /* ALU operations */
 /* 10 Points */
+// Michael C. (4/21/2024 @15:22:00)
 int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigned funct,char ALUOp,char ALUSrc,unsigned *ALUresult,char *Zero)
 {
-
+    // [ALU_operations(...) #1 in teacher's guideline]
+    if (ALUSrc == 1) {
+        // Based on ALUSrc
+        data2 = extended_value;
+    }
+    // [ALU_operations(...) #2 in teacher's guideline]
+    if (ALUOp == 7){
+        // Based on ALUOp and funct
+        if (funct == 32) {
+            ALUOp = 0;
+        } else if (funct == 34) {
+            ALUOp = 1;
+        } else if(funct == 42) {
+            ALUOp = 2;
+        } else if (funct == 43) {
+            ALUOp = 3;
+        } else if (funct == 36) {
+            ALUOp = 4;
+        } else if (funct == 4) {
+            ALUOp = 5;
+        } else if (funct == 39) {
+            ALUOp = 6;
+        } else {
+            // [ALU_operations(...) #5 in teacher's guideline]
+            return 1; // Halt operation
+        }
+        // [ALU_operations(...) #3 and #4 in teacher's guideline]
+        ALU(data1, data2, ALUOp, ALUresult, Zero);
+    } else {
+        // [ALU_operations(...) #3 and #4 in teacher's guideline]
+        ALU(data1, data2, ALUOp, ALUresult, Zero);
+    }
+    return 0; // Otherwise return 0
 }
 
 /* Read / Write Memory */
