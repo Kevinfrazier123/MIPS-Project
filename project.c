@@ -318,6 +318,29 @@ int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigne
 /* 10 Points */
 int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsigned *memdata,unsigned *Mem)
 {
+	//if memory is being read but not written
+  if(MemRead==0x1&& MemWrite==0x0){
+    return *memdata;
+  }
+//if memory is being written but not read
+  if(MemRead==0x0&& MemWrite==0x1){
+    if(ALUresult%4==0){
+      Mem[ALUresult>>2]=data2;
+    }
+      return 0x1;
+  }
+//if memory is being read and written
+  if(MemRead==0x1&& MemWrite==0x1){
+    if(ALUresult%4==0){
+      Mem[ALUresult>>2]=data2;
+    }
+    return *memdata;
+  }
+//if memory is not being read or written
+  if(MemRead == 0x0 && MemWrite == 0x0){
+    return 0x0;
+  }
+	
 
 }
 
@@ -326,6 +349,32 @@ int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsig
 /* 10 Points */
 void write_register(unsigned r2,unsigned r3,unsigned memdata,unsigned ALUresult,char RegWrite,char RegDst,char MemtoReg,unsigned *Reg)
 {
+	if(RegWrite=0x0){
+    //If the code does not write to a register, do nothing.
+    return;
+  }
+  if(RegWrite=0x1){
+    //if the code does write to a register the following logic will be executed
+    if(MemtoReg=0x0){
+      //if the code does not write to memory, the following logic will be executed
+      if(RegDst=0x0){
+        
+        Reg[r2]=ALUresult;
+      }else{
+        Reg[r3]=ALUresult;
+      }
+    }else{
+      if(RegDst=0x0){
+        Reg[r2]=memdata;
+      }
+    }
+    if(RegDst=0x1){
+        Reg[r3]=memdata;
+      }
+    }
+  else{
+    return;
+  }
 
 }
 
@@ -333,6 +382,22 @@ void write_register(unsigned r2,unsigned r3,unsigned memdata,unsigned ALUresult,
 /* 10 Points */
 void PC_update(unsigned jsec,unsigned extended_value,char Branch,char Jump,char Zero,unsigned *PC)
 {
+	 //this code will mimic the pc update logic
+  if(Branch ==0x0){
+    //If there is no branch pc is pc+4
+     *PC++=4;
+  }else{
+    if(Zero==0x0){
+      *PC+=4;
+    }else{
+      *PC+=4+((extended_value<<2)&0x0000FFFF);
+    }
+  }
+  if(Jump==0x1){
+    *PC=((jsec<<2)&0x0000FFFF);
+  }else{
+    return;
+  }
 
 }
 
