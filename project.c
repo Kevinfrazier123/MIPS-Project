@@ -63,6 +63,21 @@ void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
 int instruction_fetch(unsigned PC,unsigned *Mem,unsigned *instruction)
 {
 
+    // Instruction address should be word aligned (divisble by 4)
+    if ((PC % 4) != 0) {
+
+    // Returning 1, since a halt condition occured 
+        return 1;
+    }
+   
+    // 1. Store a value into the instruction variable
+    // Get the instruction put it somewhere 
+    *instruction = Mem[PC >> 2];
+
+    return 0; // Returning 0 since there is no halt 
+    
+
+    
 }
 
 
