@@ -58,29 +58,128 @@ void ALU(unsigned A,unsigned B,char ALUControl,unsigned *ALUresult,char *Zero)
     }
 }
 
+// Kevin Frazier
 /* instruction fetch */
 /* 10 Points */
 int instruction_fetch(unsigned PC,unsigned *Mem,unsigned *instruction)
 {
 
+    // Instruction address should be word aligned (divisble by 4)
+    if ((PC % 4) != 0) {
+
+    // Returning 1, since a halt condition occured
+        return 1;
+    }
+
+    // 1. Store a value into the instruction variable
+    // Get the instruction put it somewhere
+    *instruction = Mem[PC >> 2];
+
+    return 0; // Returning 0 since there is no halt
+
+
+
 }
 
-
+// Kevin Frazier
 /* instruction partition */
 /* 10 Points */
 void instruction_partition(unsigned instruction, unsigned *op, unsigned *r1,unsigned *r2, unsigned *r3, unsigned *funct, unsigned *offset, unsigned *jsec)
 {
+    // Extracting bits into integers
+    //Given intructions and splitting them up into different parts
 
+    // [bits 31-26]
+    *op = instruction >> 26;
+    // instruction [25-21]
+    *r1 = instruction >> 21 & 0x1F;
+    // instruction [20-16]
+    *r2 = instruction >> 16 & 0x1F;
+    // instruction [15-1]
+    *r3 = instruction >> 11 & 0x1F;
+
+    // instruction [5-0]
+    *funct = instruction & 0x3F;
+    // instruction [15-0]
+    *offset = instruction & 0xFFFF;
+    // instruction [25-0]
+    *jsec = instruction & 0x3FFFFFF;
 }
 
 
-
+// REDONE @KEVIN
 /* instruction decode */
 /* 15 Points */
-int instruction_decode(unsigned op,struct_controls *controls)
-{
-
+int instruction_decode(unsigned op,struct_controls *controls){
+    // Initialize
+    controls->RegDst = 0;
+    controls->Jump = 0;
+    controls->Branch = 0;
+    controls->MemRead = 0;
+    controls->MemtoReg = 0;
+    controls->ALUOp = 0;
+    controls->MemWrite = 0;
+    controls->ALUSrc = 0;
+    controls->RegWrite = 0;
+    // R-Type
+    if (op == 0x0) {
+        controls->RegDst = 1;
+        controls->ALUOp = 7;
+        controls->RegWrite = 1;
+    // Add
+    } else if (op == 0x8) {
+        controls->RegWrite = 1;
+        controls->ALUSrc = 1;
+    // Load
+    } else if (op == 0x23) {
+        controls->RegWrite = 1;
+        controls->MemRead = 1;
+        controls->MemtoReg = 1;
+        controls->ALUSrc = 1;
+    // Store
+    } else if (op == 0x2b) {
+        controls->MemWrite = 1;
+        controls->RegDst = 2;
+        controls->MemtoReg = 2;
+        controls->ALUSrc = 1;
+    // Upper
+    } else if (op == 0xf) {
+        controls->RegWrite = 1;
+        controls->ALUOp = 6;
+        controls->ALUSrc = 1;
+    // Branch
+    } else if (op == 0x4) {
+        controls->Branch = 1;
+        controls->RegDst = 2;
+        controls->MemtoReg = 2;
+        controls->ALUSrc = 1;
+        controls->ALUOp = 1;
+    // Less Than (Signed)
+    } else if (op == 0xa) {
+        controls->ALUOp = 2;
+        controls->RegWrite = 1;
+        controls->ALUSrc = 1;
+    // Less Than (Unsigned)
+    } else if (op == 0xb) {
+        controls->ALUOp = 3;
+        controls->RegWrite = 1;
+        controls->ALUSrc = 1;
+    // Jump
+    } else if (op == 0x2) {
+        controls->Jump = 1;
+        controls->RegDst = 2;
+        controls->Branch = 2;
+        controls->MemtoReg = 2;
+        controls->ALUSrc = 2;
+        controls->ALUOp = 2;
+    // Halt
+    } else {
+        return 1;
+    }
+    // Success
+    return 0;
 }
+
 
 /* Read Register */
 /* 5 Points */
@@ -153,23 +252,70 @@ int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigne
 
 /* Read / Write Memory */
 /* 10 Points */
-int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsigned *memdata,unsigned *Mem)
-{
-
+int rw_memory(unsigned ALUresult, unsigned data2, char MemWrite, char MemRead, unsigned * memdata, unsigned * Mem) {
+    //if memory is being read but not written
+    if (MemRead == 0x1 && MemWrite == 0x0) {
+        return * memdata;
+    }
+    //if memory is being written but not read
+    if (MemRead == 0x0 && MemWrite == 0x1) {
+        if (ALUresult % 4 == 0) {
+            Mem[ALUresult >> 2] = data2;
+        }
+        return 0x1;
+    }
+    //if memory is being read and written
+    if (MemRead == 0x1 && MemWrite == 0x1) {
+        if (ALUresult % 4 == 0) {
+            Mem[ALUresult >> 2] = data2;
+        }
+        return * memdata;
+    }
+    //if memory is not being read or written
+    if (MemRead == 0x0 && MemWrite == 0x0) {
+        return 0x0;
+    }
+    return 0x0; // REDONE @KEVIN I Added Because otherwise didn't have return in all instances. (Error for coding in C)
 }
 
-
+// REDONE @KEVIN
 /* Write Register */
 /* 10 Points */
 void write_register(unsigned r2,unsigned r3,unsigned memdata,unsigned ALUresult,char RegWrite,char RegDst,char MemtoReg,unsigned *Reg)
 {
-
+    // If Register File
+    if (RegWrite == 1) {
+        // Determine Based on Source
+        if (MemtoReg == 1) {
+            // Write Memory
+            Reg[r2] = memdata;
+        } else if (MemtoReg == 0){
+            // Determine Based on RegDst
+            if (RegDst == 1) {
+                // Write Memory
+                Reg[r3] = ALUresult;
+            } else {
+                // Write Memory
+                Reg[r2] = ALUresult;
+            }
+        }
+    }
 }
 
+// REDONE @KEVIN
 /* PC update */
 /* 10 Points */
 void PC_update(unsigned jsec,unsigned extended_value,char Branch,char Jump,char Zero,unsigned *PC)
 {
-
+    // Increase Counter
+    *PC += 4;
+    // If Branched & Got Zero
+    if (Branch == 1 && Zero == 1) {
+        // Add Extended Value to PC
+        *PC += extended_value << 2;
+    }
+    // If Need Jump
+    if (Jump == 1) {
+        *PC = (jsec << 2) | (*PC & 0xf000000);
+    }
 }
-
